@@ -6,7 +6,7 @@ import com.github.tartaricacid.touhoulittlemaid.compat.tacz.ai.GunAttackStrafing
 import com.github.tartaricacid.touhoulittlemaid.compat.tacz.ai.GunShootTargetTask;
 import com.github.tartaricacid.touhoulittlemaid.compat.tacz.ai.GunWalkToTarget;
 import com.github.tartaricacid.touhoulittlemaid.compat.tacz.utils.GunBehaviorUtils;
-import com.github.tartaricacid.touhoulittlemaid.compat.tacz.utils.GunNearestLivingEntitySensor;
+import com.github.tartaricacid.touhoulittlemaid.config.subconfig.MaidConfig;
 import com.github.tartaricacid.touhoulittlemaid.entity.passive.EntityMaid;
 import com.github.tartaricacid.touhoulittlemaid.init.InitSounds;
 import com.github.tartaricacid.touhoulittlemaid.util.SoundUtil;
@@ -70,6 +70,19 @@ public class TaskGunAttack implements IAttackTask {
     }
 
     @Override
+    public List<Pair<Integer, BehaviorControl<? super EntityMaid>>> createRideBrainTasks(EntityMaid maid) {
+        BehaviorControl<EntityMaid> supplementedTask = StartAttacking.create(this::mainhandHoldGun, GunBehaviorUtils::findFirstValidAttackTarget);
+        BehaviorControl<EntityMaid> findTargetTask = StopAttackingIfTargetInvalid.create(target -> !mainhandHoldGun(maid) || farAway(target, maid));
+        BehaviorControl<EntityMaid> gunShootTargetTask = new GunShootTargetTask();
+
+        return Lists.newArrayList(
+                Pair.of(5, supplementedTask),
+                Pair.of(5, findTargetTask),
+                Pair.of(5, gunShootTargetTask)
+        );
+    }
+
+    @Override
     public List<Pair<String, Predicate<EntityMaid>>> getConditionDescription(EntityMaid maid) {
         return Collections.singletonList(Pair.of("has_tacz_gun", this::mainhandHoldGun));
     }
@@ -79,6 +92,6 @@ public class TaskGunAttack implements IAttackTask {
     }
 
     private boolean farAway(LivingEntity target, EntityMaid maid) {
-        return maid.distanceTo(target) > GunNearestLivingEntitySensor.getRadiusSearchRange();
+        return maid.distanceTo(target) > MaidConfig.MAID_GUN_LONG_DISTANCE.get();
     }
 }

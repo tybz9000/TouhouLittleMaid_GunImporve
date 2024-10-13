@@ -53,12 +53,12 @@ public class GunShootTargetTask extends Behavior<EntityMaid> {
     @Override
     protected void tick(ServerLevel worldIn, EntityMaid owner, long gameTime) {
         owner.getBrain().getMemory(MemoryModuleType.ATTACK_TARGET).ifPresent((target) -> {
-            //实际上按照原版mc判定是看不见的，强行看见并朝向（没关就是开了？）
+            // 实际上按照原版mc判定是看不见的，强行看见并朝向（没关就是开了？）
             owner.getLookControl().setLookAt(target.getX(), target.getY(), target.getZ());
             boolean canSee = GunBehaviorUtils.canSee(owner, target);
             boolean seeTimeMoreThanZero = this.seeTime > 0;
 
-/*            // 如果两者不一致，重置看见时间
+            // 如果两者不一致，重置看见时间
             if (canSee != seeTimeMoreThanZero) {
                 this.seeTime = 0;
             }
@@ -67,10 +67,10 @@ public class GunShootTargetTask extends Behavior<EntityMaid> {
                 ++this.seeTime;
             } else {
                 --this.seeTime;
-            }*/
+            }
 
             // 如果实体手部处于激活状态
-            if (--this.attackCooldown <= 0 && canSee) {
+            if (--this.attackCooldown <= 0 && this.seeTime >= -60 && canSee) {
                 ItemStack mainHandItem = owner.getMainHandItem();
                 IGun iGun = IGun.getIGunOrNull(mainHandItem);
                 if (iGun == null) {
@@ -108,7 +108,7 @@ public class GunShootTargetTask extends Behavior<EntityMaid> {
         if (gunIndex.getType().equals(sniper) && !gunOperator.getSynIsAiming()) {
             gunOperator.aim(true);
             // 多加 2 tick，用来平衡延迟
-            this.attackCooldown = Math.round(gunData.getAimTime() * 2) + 1;
+            this.attackCooldown = Math.round(gunData.getAimTime() * 20) + 2;
             return;
         }
 
@@ -118,13 +118,13 @@ public class GunShootTargetTask extends Behavior<EntityMaid> {
             if (distance <= radius && gunOperator.getSynIsAiming()) {
                 gunOperator.aim(false);
                 // 多加 2 tick，用来平衡延迟
-                this.attackCooldown = Math.round(gunData.getAimTime() * 2) + 1;
+                this.attackCooldown = Math.round(gunData.getAimTime() * 20) + 2;
                 return;
             }
             if (distance > radius && !gunOperator.getSynIsAiming()) {
                 gunOperator.aim(true);
                 // 多加 2 tick，用来平衡延迟
-                this.attackCooldown = Math.round(gunData.getAimTime() * 2) + 1;
+                this.attackCooldown = Math.round(gunData.getAimTime() * 20) + 2;
                 return;
             }
         }
@@ -132,20 +132,20 @@ public class GunShootTargetTask extends Behavior<EntityMaid> {
         if (result == ShootResult.NOT_DRAW) {
             gunOperator.draw(shooter::getMainHandItem);
             // 多加 2 tick，用来平衡延迟
-            this.attackCooldown = Math.round(gunData.getDrawTime() * 2) + 1;
+            this.attackCooldown = Math.round(gunData.getDrawTime() * 20) + 2;
             return;
         }
 
         if (result == ShootResult.NEED_BOLT) {
             gunOperator.bolt();
-            this.attackCooldown = Math.round(gunData.getBoltActionTime() * 2) + 1;
+            this.attackCooldown = Math.round(gunData.getBoltActionTime() * 20) + 2;
             return;
         }
 
         if (result == ShootResult.NO_AMMO) {
             gunOperator.reload();
             float emptyTime = gunData.getReloadData().getCooldown().getEmptyTime();
-            this.attackCooldown = Math.round(emptyTime * 2) + 1;
+            this.attackCooldown = Math.round(emptyTime * 20) + 2;
             return;
         }
 
@@ -155,7 +155,7 @@ public class GunShootTargetTask extends Behavior<EntityMaid> {
             return;
         }
 
-        this.attackCooldown = 1;
+        this.attackCooldown = 2;
     }
 
     @Override

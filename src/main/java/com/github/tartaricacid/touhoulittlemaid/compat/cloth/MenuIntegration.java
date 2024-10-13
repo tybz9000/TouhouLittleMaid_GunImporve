@@ -1,5 +1,6 @@
 package com.github.tartaricacid.touhoulittlemaid.compat.cloth;
 
+import com.github.tartaricacid.touhoulittlemaid.api.event.client.AddClothConfigEvent;
 import com.github.tartaricacid.touhoulittlemaid.config.subconfig.ChairConfig;
 import com.github.tartaricacid.touhoulittlemaid.config.subconfig.MaidConfig;
 import com.github.tartaricacid.touhoulittlemaid.config.subconfig.MiscConfig;
@@ -16,6 +17,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
 import net.minecraftforge.client.ConfigScreenHandler;
+import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.registries.ForgeRegistries;
 
@@ -32,6 +34,7 @@ public class MenuIntegration {
         chairConfig(root, entryBuilder);
         miscConfig(root, entryBuilder);
         vanillaConfig(root, entryBuilder);
+        MinecraftForge.EVENT_BUS.post(new AddClothConfigEvent(root, entryBuilder));
         return root;
     }
 
@@ -163,6 +166,21 @@ public class MenuIntegration {
                     }
                     MaidConfig.MAID_EATEN_RETURN_CONTAINER_LIST.set(maidMealContainerList);
                 }).build());
+
+        maid.addEntry(entryBuilder.startIntField(Component.translatable("config.touhou_little_maid.maid.maid_gun_long_distance"), MaidConfig.MAID_GUN_LONG_DISTANCE.get())
+                .setDefaultValue(64).setMin(0).setMax(512).requireRestart()
+                .setTooltip(Component.translatable("config.touhou_little_maid.maid.maid_gun_long_distance.tooltip"))
+                .setSaveConsumer(i -> MaidConfig.MAID_GUN_LONG_DISTANCE.set(i)).build());
+
+        maid.addEntry(entryBuilder.startIntField(Component.translatable("config.touhou_little_maid.maid.maid_gun_medium_distance"), MaidConfig.MAID_GUN_MEDIUM_DISTANCE.get())
+                .setDefaultValue(48).setMin(0).setMax(512).requireRestart()
+                .setTooltip(Component.translatable("config.touhou_little_maid.maid.maid_gun_medium_distance.tooltip"))
+                .setSaveConsumer(i -> MaidConfig.MAID_GUN_MEDIUM_DISTANCE.set(i)).build());
+
+        maid.addEntry(entryBuilder.startIntField(Component.translatable("config.touhou_little_maid.maid.maid_gun_near_distance"), MaidConfig.MAID_GUN_NEAR_DISTANCE.get())
+                .setDefaultValue(32).setMin(0).setMax(512).requireRestart()
+                .setTooltip(Component.translatable("config.touhou_little_maid.maid.maid_gun_near_distance.tooltip"))
+                .setSaveConsumer(i -> MaidConfig.MAID_GUN_NEAR_DISTANCE.set(i)).build());
     }
 
     private static void chairConfig(ConfigBuilder root, ConfigEntryBuilder entryBuilder) {
