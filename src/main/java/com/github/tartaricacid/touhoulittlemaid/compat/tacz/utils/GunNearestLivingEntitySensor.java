@@ -14,7 +14,7 @@ import java.util.List;
 
 public class GunNearestLivingEntitySensor {
     private static final int VERTICAL_SEARCH_RANGE = 64;
-    private static final int RADIUS_SEARCH_RANGE = 128;
+    private static final int RADIUS_SEARCH_RANGE = 64;
 
     public static boolean isGunTask(EntityMaid maid) {
         return maid.getTask().getUid().equals(TaskGunAttack.UID);

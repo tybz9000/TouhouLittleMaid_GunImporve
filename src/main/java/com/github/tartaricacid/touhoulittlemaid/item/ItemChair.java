@@ -87,7 +87,7 @@ public class ItemChair extends Item {
             Level world = context.getLevel();
             BlockPos clickedPos = new BlockPlaceContext(context).getClickedPos();
             AABB boundingBox = EntityChair.TYPE.getDimensions().makeBoundingBox(Vec3.atBottomCenterOf(clickedPos));
-            if (world.noCollision(boundingBox) && world.getEntities(null, boundingBox).isEmpty()) {
+            if (world.noCollision(boundingBox)) {
                 ItemStack stack = context.getItemInHand();
                 if (world instanceof ServerLevel) {
                     ServerLevel serverWorld = (ServerLevel) world;

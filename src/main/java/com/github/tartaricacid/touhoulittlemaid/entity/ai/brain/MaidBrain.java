@@ -86,7 +86,7 @@ public final class MaidBrain {
         Pair<Integer, BehaviorControl<? super EntityMaid>> pickupItem = Pair.of(10, new MaidPickupEntitiesTask(EntityMaid::isPickup, 0.6f));
         Pair<Integer, BehaviorControl<? super EntityMaid>> clearSleep = Pair.of(99, new MaidClearSleepTask());
 
-        brain.addActivity(Activity.CORE, ImmutableList.of(swim, look, maidPanic, maidAwait, interactWithDoor, walkToTarget, followOwner, healSelf, pickupItem, clearSleep));
+        brain.addActivity(Activity.CORE, ImmutableList.of(swim, look, maidPanic, interactWithDoor, walkToTarget, followOwner, healSelf, pickupItem, clearSleep));
     }
 
     private static void registerIdleGoals(Brain<EntityMaid> brain) {
