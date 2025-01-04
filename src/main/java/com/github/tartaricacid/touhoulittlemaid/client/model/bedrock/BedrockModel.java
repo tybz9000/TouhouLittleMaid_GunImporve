@@ -2,6 +2,7 @@ package com.github.tartaricacid.touhoulittlemaid.client.model.bedrock;
 
 import com.github.tartaricacid.touhoulittlemaid.api.entity.IMaid;
 import com.github.tartaricacid.touhoulittlemaid.client.animation.CustomJsAnimationManger;
+import com.github.tartaricacid.touhoulittlemaid.client.animation.HardcodedAnimationManger;
 import com.github.tartaricacid.touhoulittlemaid.client.animation.inner.IAnimation;
 import com.github.tartaricacid.touhoulittlemaid.client.animation.script.EntityChairWrapper;
 import com.github.tartaricacid.touhoulittlemaid.client.animation.script.EntityMaidWrapper;
@@ -9,7 +10,6 @@ import com.github.tartaricacid.touhoulittlemaid.client.animation.script.ModelRen
 import com.github.tartaricacid.touhoulittlemaid.client.model.BedrockVersion;
 import com.github.tartaricacid.touhoulittlemaid.client.model.pojo.*;
 import com.github.tartaricacid.touhoulittlemaid.client.resource.CustomPackLoader;
-import com.github.tartaricacid.touhoulittlemaid.compat.immersivemelodies.ImmersiveMelodiesCompat;
 import com.github.tartaricacid.touhoulittlemaid.entity.item.EntityChair;
 import com.google.common.collect.Lists;
 import com.mojang.blaze3d.vertex.PoseStack;
@@ -259,9 +259,8 @@ public class BedrockModel<T extends LivingEntity> extends EntityModel<T> {
                 IMaid maid = IMaid.convert(mob);
                 if (maid != null) {
                     setupMaidAnim(maid, limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch, invocable);
-                    ImmersiveMelodiesCompat.setAngles(maid, this.hasHead() ? this.getHead() : null, this.getHat(),
-                            this.hasLeftArm() ? this.getArm(HumanoidArm.LEFT) : null,
-                            this.hasRightArm() ? this.getArm(HumanoidArm.RIGHT) : null);
+                    // 硬编码动画
+                    HardcodedAnimationManger.playMaidAnimation(maid, modelMap, limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch);
                 }
                 return;
             }
@@ -349,15 +348,6 @@ public class BedrockModel<T extends LivingEntity> extends EntityModel<T> {
 
     public BedrockPart getHead() {
         return modelMap.get("head").getModelRenderer();
-    }
-
-    @Nullable
-    public BedrockPart getHat() {
-        ModelRendererWrapper hat = modelMap.get("hat");
-        if (hat != null) {
-            return hat.getModelRenderer();
-        }
-        return null;
     }
 
     public boolean hasLeftArm() {

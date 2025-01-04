@@ -19,6 +19,7 @@ import com.github.tartaricacid.touhoulittlemaid.compat.slashblade.SlashBladeComp
 import com.github.tartaricacid.touhoulittlemaid.config.subconfig.MaidConfig;
 import com.github.tartaricacid.touhoulittlemaid.entity.ai.brain.MaidBrain;
 import com.github.tartaricacid.touhoulittlemaid.entity.ai.brain.MaidSchedule;
+import com.github.tartaricacid.touhoulittlemaid.entity.ai.control.MaidMoveControl;
 import com.github.tartaricacid.touhoulittlemaid.entity.ai.navigation.MaidPathNavigation;
 import com.github.tartaricacid.touhoulittlemaid.entity.backpack.*;
 import com.github.tartaricacid.touhoulittlemaid.entity.chatbubble.ChatBubbleManger;
@@ -212,6 +213,7 @@ public class EntityMaid extends TamableAnimal implements CrossbowAttackMob, IMai
     private final MaidTaskDataMaps taskDataMaps = new MaidTaskDataMaps();
     private final FavorabilityManager favorabilityManager;
     private final MaidScriptBookManager scriptBookManager;
+    private final MaidSwimManager swimManager;
     private final SchedulePos schedulePos;
 
     public final ItemStack[] handItemsForAnimation = new ItemStack[]{ItemStack.EMPTY, ItemStack.EMPTY};
@@ -239,6 +241,9 @@ public class EntityMaid extends TamableAnimal implements CrossbowAttackMob, IMai
         this.favorabilityManager = new FavorabilityManager(this);
         this.scriptBookManager = new MaidScriptBookManager();
         this.schedulePos = new SchedulePos(BlockPos.ZERO, world.dimension().location());
+
+        this.moveControl = new MaidMoveControl(this);
+        this.swimManager = new MaidSwimManager(this);
     }
 
     public EntityMaid(Level worldIn) {
@@ -1241,6 +1246,12 @@ public class EntityMaid extends TamableAnimal implements CrossbowAttackMob, IMai
     }
 
     @Override
+    protected void completeUsingItem() {
+        this.getSwimManager().resetEatBreatheItem();
+        super.completeUsingItem();
+    }
+
+    @Override
     public ItemStack eat(Level level, ItemStack food) {
         ItemStack foodAfterEat = super.eat(level, food);
         MinecraftForge.EVENT_BUS.post(new MaidAfterEatEvent(this, foodAfterEat));
@@ -1995,5 +2006,45 @@ public class EntityMaid extends TamableAnimal implements CrossbowAttackMob, IMai
             vec3 = new Vec3(vec3.x, 0.2, vec3.z);
         }
         return vec3;
+    }
+
+    public void setNavigation(PathNavigation navigation) {
+        this.navigation = navigation;
+    }
+
+    public MaidSwimManager getSwimManager() {
+        return swimManager;
+    }
+
+    @Override
+    @SuppressWarnings("deprecation")
+    public boolean isPushedByFluid() {
+        return !this.isSwimming();
+    }
+
+    @Override
+    public void travel(Vec3 travelVector) {
+        if (this.isControlledByLocalInstance() && this.isInWater() && this.getSwimManager().wantToSwim()) {
+            this.moveRelative(0.01F, travelVector);
+            this.move(MoverType.SELF, this.getDeltaMovement());
+            this.setDeltaMovement(this.getDeltaMovement().scale(0.9));
+        } else {
+            super.travel(travelVector);
+        }
+    }
+
+    @Override
+    public EntityDimensions getDimensions(Pose pose) {
+        return pose == Pose.SWIMMING ? this.getSwimManager().getSwimmingDimensions() : super.getDimensions(pose);
+    }
+
+    @Override
+    public void updateSwimming() {
+        this.getSwimManager().updateSwimming();
+    }
+
+    @Override
+    public boolean isVisuallySwimming() {
+        return this.isSwimming();
     }
 }
