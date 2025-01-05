@@ -1,7 +1,5 @@
-package com.github.tartaricacid.touhoulittlemaid.compat.tacz.ai;
+package com.github.tartaricacid.touhoulittlemaid.entity.ai.brain.task;
 
-import com.github.tartaricacid.touhoulittlemaid.compat.tacz.utils.GunBehaviorUtils;
-import com.github.tartaricacid.touhoulittlemaid.compat.tacz.utils.GunNearestLivingEntitySensor;
 import com.github.tartaricacid.touhoulittlemaid.entity.passive.EntityMaid;
 import com.mojang.datafixers.kinds.IdF;
 import com.mojang.datafixers.kinds.OptionalBox;
@@ -19,7 +17,12 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.function.Function;
 
-public class GunWalkToTarget {
+/**
+ * 修改了原版的走向攻击目标的 AI，现在能够依据超远视距和 home 范围进行行走判断
+ * <p>
+ * 主要用于远程射击，近战的还是请走 SetWalkTargetFromAttackTargetIfTargetOutOfReach
+ */
+public class MaidRangedWalkToTarget {
     public static BehaviorControl<EntityMaid> create(float speedModifier) {
         return create(entity -> speedModifier);
     }
@@ -43,7 +46,7 @@ public class GunWalkToTarget {
                                                  MemoryAccessor<OptionalBox.Mu, NearestVisibleLivingEntities> livingEntitiesMemory) {
         return (level, maid, gameTime) -> {
             LivingEntity target = maidInstance.get(entityMemory);
-            if (GunBehaviorUtils.canSee(maid, target) && isWithinRestriction(maid, target)) {
+            if (maid.canSee(target) && isWithinRestriction(maid, target)) {
                 walkTargetMemory.erase();
             } else {
                 positionMemory.set(new EntityTracker(target, true));

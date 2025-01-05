@@ -1,12 +1,11 @@
 package com.github.tartaricacid.touhoulittlemaid.compat.tacz.task;
 
 import com.github.tartaricacid.touhoulittlemaid.TouhouLittleMaid;
-import com.github.tartaricacid.touhoulittlemaid.api.task.IAttackTask;
+import com.github.tartaricacid.touhoulittlemaid.api.task.IRangedAttackTask;
 import com.github.tartaricacid.touhoulittlemaid.compat.tacz.ai.GunAttackStrafingTask;
 import com.github.tartaricacid.touhoulittlemaid.compat.tacz.ai.GunShootTargetTask;
-import com.github.tartaricacid.touhoulittlemaid.compat.tacz.ai.GunWalkToTarget;
-import com.github.tartaricacid.touhoulittlemaid.compat.tacz.utils.GunBehaviorUtils;
 import com.github.tartaricacid.touhoulittlemaid.config.subconfig.MaidConfig;
+import com.github.tartaricacid.touhoulittlemaid.entity.ai.brain.task.MaidRangedWalkToTarget;
 import com.github.tartaricacid.touhoulittlemaid.entity.passive.EntityMaid;
 import com.github.tartaricacid.touhoulittlemaid.init.InitItems;
 import com.github.tartaricacid.touhoulittlemaid.init.InitSounds;
@@ -15,6 +14,7 @@ import com.google.common.collect.Lists;
 import com.mojang.datafixers.util.Pair;
 import com.tacz.guns.GunMod;
 import com.tacz.guns.api.TimelessAPI;
+import com.tacz.guns.api.item.GunTabType;
 import com.tacz.guns.api.item.IGun;
 import com.tacz.guns.api.item.builder.GunItemBuilder;
 import net.minecraft.resources.ResourceLocation;
@@ -23,15 +23,24 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.behavior.BehaviorControl;
 import net.minecraft.world.entity.ai.behavior.StartAttacking;
 import net.minecraft.world.entity.ai.behavior.StopAttackingIfTargetInvalid;
+import net.minecraft.world.entity.ai.targeting.TargetingConditions;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.phys.AABB;
 
 import javax.annotation.Nullable;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 import java.util.function.Predicate;
 
-public class TaskGunAttack implements IAttackTask {
+public class TaskGunAttack implements IRangedAttackTask {
     public static final ResourceLocation UID = new ResourceLocation(TouhouLittleMaid.MOD_ID, "gun_attack");
+    // 可见性校验工具，来自于 Sensor
+    // 依据枪械种类，可以区分为远、中、近三类
+    private static final TargetingConditions LONG_DISTANCE_TARGET_CONDITIONS = TargetingConditions.forNonCombat().range(MaidConfig.MAID_GUN_LONG_DISTANCE.get());
+    private static final TargetingConditions MEDIUM_DISTANCE_TARGET_CONDITIONS = TargetingConditions.forNonCombat().range(MaidConfig.MAID_GUN_MEDIUM_DISTANCE.get());
+    private static final TargetingConditions NEAR_DISTANCE_TARGET_CONDITIONS = TargetingConditions.forNonCombat().range(MaidConfig.MAID_GUN_NEAR_DISTANCE.get());
+
     private ItemStack icon;
 
     @Override
@@ -62,9 +71,9 @@ public class TaskGunAttack implements IAttackTask {
 
     @Override
     public List<Pair<Integer, BehaviorControl<? super EntityMaid>>> createBrainTasks(EntityMaid maid) {
-        BehaviorControl<EntityMaid> supplementedTask = StartAttacking.create(this::mainhandHoldGun, GunBehaviorUtils::findFirstValidAttackTarget);
+        BehaviorControl<EntityMaid> supplementedTask = StartAttacking.create(this::mainhandHoldGun, IRangedAttackTask::findFirstValidAttackTarget);
         BehaviorControl<EntityMaid> findTargetTask = StopAttackingIfTargetInvalid.create(target -> !mainhandHoldGun(maid) || farAway(target, maid));
-        BehaviorControl<EntityMaid> gunWalkTargetTask = GunWalkToTarget.create(0.6f);
+        BehaviorControl<EntityMaid> gunWalkTargetTask = MaidRangedWalkToTarget.create(0.6f);
         BehaviorControl<EntityMaid> gunAttackStrafingTask = new GunAttackStrafingTask();
         BehaviorControl<EntityMaid> gunShootTargetTask = new GunShootTargetTask();
 
@@ -79,7 +88,7 @@ public class TaskGunAttack implements IAttackTask {
 
     @Override
     public List<Pair<Integer, BehaviorControl<? super EntityMaid>>> createRideBrainTasks(EntityMaid maid) {
-        BehaviorControl<EntityMaid> supplementedTask = StartAttacking.create(this::mainhandHoldGun, GunBehaviorUtils::findFirstValidAttackTarget);
+        BehaviorControl<EntityMaid> supplementedTask = StartAttacking.create(this::mainhandHoldGun, IRangedAttackTask::findFirstValidAttackTarget);
         BehaviorControl<EntityMaid> findTargetTask = StopAttackingIfTargetInvalid.create(target -> !mainhandHoldGun(maid) || farAway(target, maid));
         BehaviorControl<EntityMaid> gunShootTargetTask = new GunShootTargetTask();
 
@@ -88,6 +97,50 @@ public class TaskGunAttack implements IAttackTask {
                 Pair.of(5, findTargetTask),
                 Pair.of(5, gunShootTargetTask)
         );
+    }
+
+    @Override
+    public AABB searchDimension(EntityMaid maid) {
+        if (IGun.mainhandHoldGun(maid)) {
+            float searchRange = this.searchRadius(maid);
+            if (maid.hasRestriction()) {
+                return new AABB(maid.getRestrictCenter()).inflate(searchRange);
+            } else {
+                return maid.getBoundingBox().inflate(searchRange);
+            }
+        }
+        return IRangedAttackTask.super.searchDimension(maid);
+    }
+
+    @Override
+    public float searchRadius(EntityMaid maid) {
+        return MaidConfig.MAID_GUN_LONG_DISTANCE.get();
+    }
+
+    @Override
+    public boolean canSee(EntityMaid maid, LivingEntity target) {
+        ItemStack handItem = maid.getMainHandItem();
+        IGun iGun = IGun.getIGunOrNull(handItem);
+        if (iGun != null) {
+            ResourceLocation gunId = iGun.getGunId(handItem);
+            return TimelessAPI.getCommonGunIndex(gunId).map(index -> {
+                String type = index.getType();
+                // 狙击枪？用远距离模式
+                String sniper = GunTabType.SNIPER.name().toLowerCase(Locale.ENGLISH);
+                if (sniper.equals(type)) {
+                    return LONG_DISTANCE_TARGET_CONDITIONS.test(maid, target);
+                }
+                // 霰弹枪？手枪？近距离模式
+                String shotgun = GunTabType.SHOTGUN.name().toLowerCase(Locale.ENGLISH);
+                String pistol = GunTabType.PISTOL.name().toLowerCase(Locale.ENGLISH);
+                if (shotgun.equals(type) || pistol.equals(type)) {
+                    return NEAR_DISTANCE_TARGET_CONDITIONS.test(maid, target);
+                }
+                // 其他情况，中等距离
+                return MEDIUM_DISTANCE_TARGET_CONDITIONS.test(maid, target);
+            }).orElse(IRangedAttackTask.super.canSee(maid, target));
+        }
+        return IRangedAttackTask.super.canSee(maid, target);
     }
 
     @Override
@@ -100,6 +153,13 @@ public class TaskGunAttack implements IAttackTask {
     }
 
     private boolean farAway(LivingEntity target, EntityMaid maid) {
-        return maid.distanceTo(target) > MaidConfig.MAID_GUN_LONG_DISTANCE.get();
+        return maid.distanceTo(target) > this.searchRadius(maid);
+    }
+
+    /**
+     * 枪械射击不走原版那套逻辑，故此方法为空
+     */
+    @Override
+    public void performRangedAttack(EntityMaid shooter, LivingEntity target, float distanceFactor) {
     }
 }
