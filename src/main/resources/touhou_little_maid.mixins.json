@@ -5,7 +5,8 @@
   "compatibilityLevel": "JAVA_17",
   "refmap": "touhou_little_maid.refmap.json",
   "mixins": [
-    "EntityMixin", "FenceGateBlockAccessor", "FishingHookPredicateMixin", "MixinArrowEntity", "MixinStructureTemplate"
+    "EntityMixin", "FenceGateBlockAccessor", "FishingHookPredicateMixin", "MixinArrowEntity", "MixinStructureTemplate",
+    "MixinThrownTrident"
   ],
   "client": [
     "client.HumanoidModelMixin", "client.ItemPropertiesMixin", "client.LanguageMixin",
