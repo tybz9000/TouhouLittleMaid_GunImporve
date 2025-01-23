@@ -194,6 +194,8 @@ dependencies {
     runtimeOnly fg.deobf("maven.modrinth:just-more-cakes:1.18.1-forge")
     runtimeOnly fg.deobf("maven.modrinth:spawn-animations:1.10+mod-forge")
 
+    runtimeOnly fg.deobf("maven.modrinth:farmers-delight:1.20.1-1.2.6-forge")
+
     annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
 }
 
