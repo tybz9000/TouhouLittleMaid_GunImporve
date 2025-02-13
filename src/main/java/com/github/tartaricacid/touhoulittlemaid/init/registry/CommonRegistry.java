@@ -1,6 +1,7 @@
 package com.github.tartaricacid.touhoulittlemaid.init.registry;
 
 import com.github.tartaricacid.touhoulittlemaid.TouhouLittleMaid;
+import com.github.tartaricacid.touhoulittlemaid.ai.manager.config.CharacterSetting;
 import com.github.tartaricacid.touhoulittlemaid.block.multiblock.MultiBlockManager;
 import com.github.tartaricacid.touhoulittlemaid.entity.ai.brain.ExtraMaidBrainManager;
 import com.github.tartaricacid.touhoulittlemaid.entity.ai.fishing.FishingTypeManager;
@@ -22,6 +23,7 @@ public final class CommonRegistry {
     @SubscribeEvent
     public static void onSetupEvent(FMLCommonSetupEvent event) {
         event.enqueueWork(ServerCustomPackLoader::reloadPacks);
+        event.enqueueWork(CharacterSetting::readPresetFile);
         event.enqueueWork(NetworkHandler::init);
         event.enqueueWork(CommonRegistry::modApiInit);
     }

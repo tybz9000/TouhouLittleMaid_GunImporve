@@ -98,6 +98,10 @@ public final class NetworkHandler {
                 Optional.of(NetworkDirection.PLAY_TO_CLIENT));
         CHANNEL.registerMessage(36, WChessToServerMessage.class, WChessToServerMessage::encode, WChessToServerMessage::decode, WChessToServerMessage::handle,
                 Optional.of(NetworkDirection.PLAY_TO_SERVER));
+        CHANNEL.registerMessage(37, SendUserChatMessage.class, SendUserChatMessage::encode, SendUserChatMessage::decode, SendUserChatMessage::handle,
+                Optional.of(NetworkDirection.PLAY_TO_SERVER));
+        CHANNEL.registerMessage(38, TTSAudioToClientMessage.class, TTSAudioToClientMessage::encode, TTSAudioToClientMessage::decode, TTSAudioToClientMessage::handle,
+                Optional.of(NetworkDirection.PLAY_TO_CLIENT));
     }
 
     public static void sendToClientPlayer(Object message, Player player) {

@@ -2,6 +2,7 @@ package com.github.tartaricacid.touhoulittlemaid.entity.passive;
 
 import com.github.tartaricacid.touhoulittlemaid.TouhouLittleMaid;
 import com.github.tartaricacid.touhoulittlemaid.advancements.maid.TriggerType;
+import com.github.tartaricacid.touhoulittlemaid.ai.manager.entity.MaidAIChatManager;
 import com.github.tartaricacid.touhoulittlemaid.api.backpack.IBackpackData;
 import com.github.tartaricacid.touhoulittlemaid.api.backpack.IMaidBackpack;
 import com.github.tartaricacid.touhoulittlemaid.api.entity.IMaid;
@@ -224,6 +225,7 @@ public class EntityMaid extends TamableAnimal implements CrossbowAttackMob, IMai
     private final FavorabilityManager favorabilityManager;
     private final MaidScriptBookManager scriptBookManager;
     private final MaidSwimManager swimManager;
+    private final MaidAIChatManager aiChatManager;
     private final SchedulePos schedulePos;
     private final ItemCooldowns cooldowns;
 
@@ -260,6 +262,7 @@ public class EntityMaid extends TamableAnimal implements CrossbowAttackMob, IMai
         super(type, world);
         this.favorabilityManager = new FavorabilityManager(this);
         this.scriptBookManager = new MaidScriptBookManager();
+        this.aiChatManager = new MaidAIChatManager(this);
 
         // 尝试修复 https://github.com/TartaricAcid/TouhouLittleMaid/issues/631
         ResourceKey<Level> dimension = Objects.requireNonNullElse(world.dimension(), Level.OVERWORLD);
@@ -2246,5 +2249,9 @@ public class EntityMaid extends TamableAnimal implements CrossbowAttackMob, IMai
 
     public ItemCooldowns getCooldowns() {
         return cooldowns;
+    }
+
+    public MaidAIChatManager getAiChatManager() {
+        return aiChatManager;
     }
 }

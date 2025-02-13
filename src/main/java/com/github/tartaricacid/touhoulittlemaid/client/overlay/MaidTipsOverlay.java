@@ -2,6 +2,7 @@ package com.github.tartaricacid.touhoulittlemaid.client.overlay;
 
 import com.github.tartaricacid.touhoulittlemaid.TouhouLittleMaid;
 import com.github.tartaricacid.touhoulittlemaid.api.ILittleMaid;
+import com.github.tartaricacid.touhoulittlemaid.client.event.PressAIChatKeyEvent;
 import com.github.tartaricacid.touhoulittlemaid.entity.passive.EntityMaid;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
@@ -47,6 +48,8 @@ public class MaidTipsOverlay implements IGuiOverlay {
 
         overlay.addSpecialTips("overlay.touhou_little_maid.ntr_item.tips", (item, maid, player) -> !maid.isOwnedBy(player) && EntityMaid.getNtrItem().test(item));
         overlay.addSpecialTips("overlay.touhou_little_maid.remove_backpack.tips", (item, maid, player) -> maid.isOwnedBy(player) && maid.hasBackpack() && item.is(Tags.Items.SHEARS));
+        // FIXME: 应该要能自定义，而不是指定特定的女仆才能对话
+        overlay.addSpecialTips("overlay.touhou_little_maid.can_ai_chat.tips", MaidTipsOverlay::checkAiChatCondition);
 
         for (ILittleMaid littleMaid : TouhouLittleMaid.EXTENSIONS) {
             littleMaid.addMaidTips(overlay);
@@ -54,6 +57,17 @@ public class MaidTipsOverlay implements IGuiOverlay {
 
         TIPS = ImmutableMap.copyOf(TIPS);
         SPECIAL_TIPS = ImmutableMap.copyOf(SPECIAL_TIPS);
+    }
+
+    private static boolean checkAiChatCondition(ItemStack item, EntityMaid maid, LocalPlayer player) {
+        Minecraft mc = Minecraft.getInstance();
+        if (mc.screen != null) {
+            return false;
+        }
+        if (!item.isEmpty()) {
+            return false;
+        }
+        return maid.isOwnedBy(player) && maid.getModelId().contains(PressAIChatKeyEvent.CAN_CHAT_MAID_ID);
     }
 
     private static MutableComponent checkSpecialTips(ItemStack mainhandItem, EntityMaid maid, LocalPlayer player) {
