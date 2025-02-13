@@ -137,12 +137,21 @@ dependencies {
         jarJar.ranged(it, "[2.7.5,)")
     })
     minecraftLibrary(jarJar("com.squareup.okio:okio:1.6.0") {
-        exclude group: 'junit', module: 'junit'
         jarJar.ranged(it, "[1.6.0,)")
     })
     // MP3 音频解码库
     minecraftLibrary(jarJar("com.googlecode.soundlibs:mp3spi:1.9.5.4") {
+        // mp3spi 居然会把 junit 打包进去……
+        exclude group: 'junit', module: 'junit'
         jarJar.ranged(it, "[1.9.5,)")
+    })
+    minecraftLibrary(jarJar("com.googlecode.soundlibs:jlayer:1.0.1.4") {
+        // JLayer 居然会把 junit 打包进去……
+        exclude group: 'junit', module: 'junit'
+        jarJar.ranged(it, "[1.0.1,)")
+    })
+    minecraftLibrary(jarJar("com.googlecode.soundlibs:tritonus-share:0.3.7.4") {
+        jarJar.ranged(it, "[0.3.7,)")
     })
 
     // compile against the JEI API but do not include it at runtime
